@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 logs/*.json
 .env
+echo "report/output/" >> .gitignorereport/output/

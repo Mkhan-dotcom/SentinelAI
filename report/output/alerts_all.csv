@@ -1,0 +1,4 @@
+time,rule,severity,src_ip,dst_ip,description
+2026-11-13T19:36:06,Port Scan,HIGH,127.0.0.1,127.0.0.1,20 distinct ports probed in 5s
+2026-11-13T19:36:06,Brute Force Attempt,HIGH,127.0.0.1,127.0.0.1,10 connections to login port 22 in 30s
+2026-11-13T19:37:18,ICMP Flood,MEDIUM,127.0.0.1,127.0.0.1,50 echo requests in 5s
