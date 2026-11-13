@@ -1,0 +1,80 @@
+{
+  "trials_per_test": 5,
+  "interface": "lo",
+  "attacks": [
+    {
+      "name": "Port Scan",
+      "expected_alert": "Port Scan",
+      "trials": 5,
+      "detected": 5,
+      "detection_rate_pct": 100.0,
+      "avg_latency_s": 0.24,
+      "other_alerts_seen": []
+    },
+    {
+      "name": "ICMP Flood",
+      "expected_alert": "ICMP Flood",
+      "trials": 5,
+      "detected": 5,
+      "detection_rate_pct": 100.0,
+      "avg_latency_s": 0.18,
+      "other_alerts_seen": []
+    },
+    {
+      "name": "Brute Force (SSH port)",
+      "expected_alert": "Brute Force Attempt",
+      "trials": 5,
+      "detected": 5,
+      "detection_rate_pct": 100.0,
+      "avg_latency_s": 0.15,
+      "other_alerts_seen": []
+    },
+    {
+      "name": "SYN Flood",
+      "expected_alert": "SYN Flood",
+      "trials": 5,
+      "detected": 5,
+      "detection_rate_pct": 100.0,
+      "avg_latency_s": 0.21,
+      "other_alerts_seen": []
+    }
+  ],
+  "benign": [
+    {
+      "name": "Idle (5 s, no activity)",
+      "trials": 5,
+      "false_alarms": 0,
+      "false_alarm_rate_pct": 0.0,
+      "alerts_seen": []
+    },
+    {
+      "name": "Normal ping (5 packets)",
+      "trials": 5,
+      "false_alarms": 0,
+      "false_alarm_rate_pct": 0.0,
+      "alerts_seen": []
+    },
+    {
+      "name": "3 SSH-port connections",
+      "trials": 5,
+      "false_alarms": 0,
+      "false_alarm_rate_pct": 0.0,
+      "alerts_seen": []
+    },
+    {
+      "name": "Single port check",
+      "trials": 5,
+      "false_alarms": 0,
+      "false_alarm_rate_pct": 0.0,
+      "alerts_seen": []
+    }
+  ],
+  "totals": {
+    "attack_trials": 20,
+    "attacks_detected": 20,
+    "overall_detection_rate_pct": 100.0,
+    "benign_trials": 20,
+    "false_alarms": 0,
+    "overall_false_alarm_rate_pct": 0.0
+  }
+}
