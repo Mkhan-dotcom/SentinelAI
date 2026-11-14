@@ -17,7 +17,34 @@
       "trials": 5,
       "detected": 5,
       "detection_rate_pct": 100.0,
-      "avg_latency_s": 8.06,
+      "avg_latency_s": 8.08,
+      "other_alerts_seen": []
+    },
+    {
+      "name": "FIN Scan (stealth)",
+      "expected_alert": "Stealth Scan",
+      "trials": 5,
+      "detected": 5,
+      "detection_rate_pct": 100.0,
+      "avg_latency_s": 0.07,
+      "other_alerts_seen": []
+    },
+    {
+      "name": "NULL Scan (stealth)",
+      "expected_alert": "Stealth Scan",
+      "trials": 5,
+      "detected": 5,
+      "detection_rate_pct": 100.0,
+      "avg_latency_s": 0.07,
+      "other_alerts_seen": []
+    },
+    {
+      "name": "Xmas Scan (stealth)",
+      "expected_alert": "Stealth Scan",
+      "trials": 5,
+      "detected": 5,
+      "detection_rate_pct": 100.0,
+      "avg_latency_s": 0.06,
       "other_alerts_seen": []
     },
     {
@@ -26,7 +53,7 @@
       "trials": 5,
       "detected": 5,
       "detection_rate_pct": 100.0,
-      "avg_latency_s": 0.16,
+      "avg_latency_s": 0.14,
       "other_alerts_seen": []
     },
     {
@@ -35,7 +62,7 @@
       "trials": 5,
       "detected": 5,
       "detection_rate_pct": 100.0,
-      "avg_latency_s": 0.1,
+      "avg_latency_s": 0.12,
       "other_alerts_seen": []
     },
     {
@@ -44,7 +71,7 @@
       "trials": 5,
       "detected": 5,
       "detection_rate_pct": 100.0,
-      "avg_latency_s": 0.16,
+      "avg_latency_s": 0.17,
       "other_alerts_seen": []
     }
   ],
@@ -100,8 +127,8 @@
     }
   ],
   "totals": {
-    "attack_trials": 25,
-    "attacks_detected": 25,
+    "attack_trials": 40,
+    "attacks_detected": 40,
     "overall_detection_rate_pct": 100.0,
     "benign_trials": 35,
     "false_alarms": 0,

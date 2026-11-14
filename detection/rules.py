@@ -4,7 +4,7 @@
 Feed every PacketInfo from the sniffer into Detector.process().
 It returns a list of Alert objects (usually empty).
 """
-from collections import defaultdict, deque
+from collections import Counter, defaultdict, deque
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -17,6 +17,9 @@ PORT_SCAN_WINDOW = 5        # ... within this many seconds
 
 SLOW_SCAN_PORTS = 20        # distinct destination ports ...
 SLOW_SCAN_WINDOW = 60       # ... within this many seconds (catches slow scans)
+
+STEALTH_SCAN_PORTS = 10     # distinct ports probed with abnormal TCP flags ...
+STEALTH_SCAN_WINDOW = 30    # ... within this many seconds (FIN / NULL / Xmas scans)
 
 ICMP_FLOOD_COUNT = 50       # echo requests ...
 ICMP_FLOOD_WINDOW = 5       # ... within this many seconds
@@ -31,7 +34,7 @@ LOGIN_PORTS = {21, 22, 23, 3389, 3306, 5900}
 ALERT_COOLDOWN = 30         # max one alert per rule per source in this time
 # -----------------------------------------------------------------------
 
-MAX_WINDOW = max(PORT_SCAN_WINDOW, SLOW_SCAN_WINDOW, ICMP_FLOOD_WINDOW,
+MAX_WINDOW = max(PORT_SCAN_WINDOW, SLOW_SCAN_WINDOW, STEALTH_SCAN_WINDOW, ICMP_FLOOD_WINDOW,
                  SYN_FLOOD_WINDOW, BRUTE_FORCE_WINDOW)
 
 
@@ -58,6 +61,7 @@ class Detector:
     def __init__(self):
         self.scan: Dict[str, deque] = defaultdict(deque)    # src -> (ts, dst_port)
         self.slow: Dict[str, deque] = defaultdict(deque)    # src -> (ts, dst_port)
+        self.stealth: Dict[str, deque] = defaultdict(deque) # src -> (ts, dst_port, kind)
         self.icmp: Dict[str, deque] = defaultdict(deque)    # src -> ts
         self.syn: Dict[tuple, deque] = defaultdict(deque)   # (dst_ip, dst_port) -> ts
         self.brute: Dict[tuple, deque] = defaultdict(deque) # (src, dst_ip, dst_port) -> ts
@@ -71,9 +75,13 @@ class Detector:
             self._cleanup(p.timestamp)
 
         found: List[Optional[Alert]] = []
-        if p.protocol == "TCP" and self._is_syn(p):
-            found += [self._port_scan(p), self._slow_scan(p),
-                      self._syn_flood(p), self._brute_force(p)]
+        if p.protocol == "TCP":
+            if self._is_syn(p):
+                found += [self._port_scan(p), self._slow_scan(p),
+                          self._syn_flood(p), self._brute_force(p)]
+            kind = self._stealth_kind(p)
+            if kind:
+                found.append(self._stealth_scan(p, kind))
         elif p.protocol == "ICMP" and p.icmp_type == 8:   # echo request
             found.append(self._icmp_flood(p))
         return [a for a in found if a]
@@ -83,6 +91,20 @@ class Detector:
     def _is_syn(p: PacketInfo) -> bool:
         """New connection attempt: SYN set, ACK not set."""
         return bool(p.flags) and "S" in p.flags and "A" not in p.flags
+
+    @staticmethod
+    def _stealth_kind(p: PacketInfo) -> Optional[str]:
+        """Name of an abnormal TCP flag pattern, or None for normal packets."""
+        f = set(p.flags or "")
+        if not f:
+            return "NULL"                       # no flags at all
+        if f == {"F"}:
+            return "FIN"                        # FIN without ACK
+        if {"F", "P", "U"} <= f:
+            return "Xmas"                       # FIN + PSH + URG
+        if "S" in f and ("F" in f or "R" in f):
+            return "SYN+FIN/RST"                # impossible combination
+        return None
 
     def _allowed(self, rule: str, key: str, now: float,
                  cooldown: float = ALERT_COOLDOWN) -> bool:
@@ -124,6 +146,18 @@ class Detector:
                                f"{len(ports)} distinct ports probed in {SLOW_SCAN_WINDOW}s (slow scan)")
         return None
 
+    def _stealth_scan(self, p: PacketInfo, kind: str) -> Optional[Alert]:
+        dq = self.stealth[p.src_ip]
+        dq.append((p.timestamp, p.dst_port, kind))
+        _slide(dq, p.timestamp, STEALTH_SCAN_WINDOW, key=lambda x: x[0])
+        ports = {port for _, port, _ in dq}
+        if len(ports) >= STEALTH_SCAN_PORTS and self._allowed("Stealth Scan", p.src_ip, p.timestamp):
+            top = Counter(k for _, _, k in dq).most_common(1)[0][0]
+            return self._alert(p, "Stealth Scan", "HIGH",
+                               f"{len(ports)} distinct ports probed with {top} packets "
+                               f"in {STEALTH_SCAN_WINDOW}s")
+        return None
+
     def _icmp_flood(self, p: PacketInfo) -> Optional[Alert]:
         dq = self.icmp[p.src_ip]
         dq.append(p.timestamp)
@@ -162,6 +196,7 @@ class Detector:
         tables = (
             (self.scan, lambda e: e[0]),   # entries are (timestamp, port)
             (self.slow, lambda e: e[0]),
+            (self.stealth, lambda e: e[0]),
             (self.icmp, lambda e: e),      # entries are timestamps
             (self.syn, lambda e: e),
             (self.brute, lambda e: e),
