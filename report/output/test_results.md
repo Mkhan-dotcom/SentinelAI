@@ -1,13 +1,13 @@
 | Attack | Trials | Detected | Detection rate | Avg time to alert |
 |---|---|---|---|---|
-| Port Scan | 1 | 1 | 100.0% | 0.15 s |
-| Slow Port Scan | 1 | 1 | 100.0% | 8.09 s |
-| FIN Scan (stealth) | 1 | 1 | 100.0% | 0.07 s |
-| NULL Scan (stealth) | 1 | 1 | 100.0% | 0.08 s |
-| Xmas Scan (stealth) | 1 | 1 | 100.0% | 0.06 s |
-| ICMP Flood | 1 | 1 | 100.0% | 0.1 s |
-| Brute Force (SSH port) | 1 | 1 | 100.0% | 0.11 s |
-| SYN Flood | 1 | 1 | 100.0% | 0.17 s |
+| Port Scan | 1 | 1 | 100.0% | 0.1 s |
+| Slow Port Scan | 1 | 1 | 100.0% | 8.08 s |
+| FIN Scan (stealth) | 1 | 1 | 100.0% | 0.06 s |
+| NULL Scan (stealth) | 1 | 1 | 100.0% | 0.07 s |
+| Xmas Scan (stealth) | 1 | 1 | 100.0% | 0.07 s |
+| ICMP Flood | 1 | 1 | 100.0% | 0.11 s |
+| Brute Force (SSH port) | 1 | 1 | 100.0% | 0.15 s |
+| SYN Flood | 1 | 1 | 100.0% | 0.18 s |
 
 | Normal activity | Trials | False alarms |
 |---|---|---|

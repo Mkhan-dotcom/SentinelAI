@@ -1,0 +1,11 @@
+{
+  "_comment": "SentinelAI settings. Delete a line to use its default. 'window' values are seconds.",
+  "port_scan":    { "ports": 20, "window": 5 },
+  "slow_scan":    { "ports": 20, "window": 60 },
+  "stealth_scan": { "ports": 10, "window": 30 },
+  "icmp_flood":   { "count": 50, "window": 5 },
+  "syn_flood":    { "count": 100, "window": 5 },
+  "brute_force":  { "count": 10, "window": 30, "login_ports": [21, 22, 23, 3389, 3306, 5900] },
+  "alert_cooldown": 30,
+  "allowlist": []
+}
