@@ -4,3 +4,4 @@ __pycache__/
 logs/*.json
 .env
 echo "report/output/" >> .gitignorereport/output/
+.pytest_cache/
