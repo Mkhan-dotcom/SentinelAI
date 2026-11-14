@@ -8,7 +8,16 @@
       "trials": 5,
       "detected": 5,
       "detection_rate_pct": 100.0,
-      "avg_latency_s": 0.24,
+      "avg_latency_s": 0.1,
+      "other_alerts_seen": []
+    },
+    {
+      "name": "Slow Port Scan",
+      "expected_alert": "Slow Port Scan",
+      "trials": 5,
+      "detected": 5,
+      "detection_rate_pct": 100.0,
+      "avg_latency_s": 8.06,
       "other_alerts_seen": []
     },
     {
@@ -17,7 +26,7 @@
       "trials": 5,
       "detected": 5,
       "detection_rate_pct": 100.0,
-      "avg_latency_s": 0.18,
+      "avg_latency_s": 0.16,
       "other_alerts_seen": []
     },
     {
@@ -26,7 +35,7 @@
       "trials": 5,
       "detected": 5,
       "detection_rate_pct": 100.0,
-      "avg_latency_s": 0.15,
+      "avg_latency_s": 0.1,
       "other_alerts_seen": []
     },
     {
@@ -35,7 +44,7 @@
       "trials": 5,
       "detected": 5,
       "detection_rate_pct": 100.0,
-      "avg_latency_s": 0.21,
+      "avg_latency_s": 0.16,
       "other_alerts_seen": []
     }
   ],
@@ -67,13 +76,34 @@
       "false_alarms": 0,
       "false_alarm_rate_pct": 0.0,
       "alerts_seen": []
+    },
+    {
+      "name": "Quick scan of 15 ports (below limit)",
+      "trials": 5,
+      "false_alarms": 0,
+      "false_alarm_rate_pct": 0.0,
+      "alerts_seen": []
+    },
+    {
+      "name": "8 SSH-port connections (below limit)",
+      "trials": 5,
+      "false_alarms": 0,
+      "false_alarm_rate_pct": 0.0,
+      "alerts_seen": []
+    },
+    {
+      "name": "40 pings in 4 s (below limit)",
+      "trials": 5,
+      "false_alarms": 0,
+      "false_alarm_rate_pct": 0.0,
+      "alerts_seen": []
     }
   ],
   "totals": {
-    "attack_trials": 20,
-    "attacks_detected": 20,
+    "attack_trials": 25,
+    "attacks_detected": 25,
     "overall_detection_rate_pct": 100.0,
-    "benign_trials": 20,
+    "benign_trials": 35,
     "false_alarms": 0,
     "overall_false_alarm_rate_pct": 0.0
   }

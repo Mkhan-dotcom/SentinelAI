@@ -23,7 +23,7 @@ from pathlib import Path
 
 from scapy.all import AsyncSniffer
 
-from sniffer.sniffer import parse_packet
+from sniffer.sniffer import DuplicateFilter, open_capture_socket, parse_packet
 from detection.rules import Detector
 
 OUT_DIR = Path(__file__).resolve().parent.parent / "report" / "output"
@@ -32,6 +32,8 @@ OUT_DIR = Path(__file__).resolve().parent.parent / "report" / "output"
 ATTACKS = [
     ("Port Scan", "Port Scan",
      ["nmap", "-sS", "-p", "1-200", "127.0.0.1"], ["nmap"]),
+    ("Slow Port Scan", "Slow Port Scan",
+     ["nmap", "-sS", "-T2", "-p", "1-100", "127.0.0.1"], ["nmap"]),
     ("ICMP Flood", "ICMP Flood",
      ["ping", "-f", "-c", "300", "127.0.0.1"], ["ping"]),
     ("Brute Force (SSH port)", "Brute Force Attempt",
@@ -47,6 +49,11 @@ BENIGN = [
     ("3 SSH-port connections", ["bash", "-c", "for i in 1 2 3; do nc -zw1 127.0.0.1 22; done"],
      ["bash", "nc"]),
     ("Single port check", ["nmap", "-p", "22", "127.0.0.1"], ["nmap"]),
+    # just below each threshold: these must stay quiet
+    ("Quick scan of 15 ports (below limit)", ["nmap", "-sS", "-p", "1-15", "127.0.0.1"], ["nmap"]),
+    ("8 SSH-port connections (below limit)",
+     ["bash", "-c", "for i in $(seq 8); do nc -zw1 127.0.0.1 22; done"], ["bash", "nc"]),
+    ("40 pings in 4 s (below limit)", ["ping", "-c", "40", "-i", "0.1", "127.0.0.1"], ["ping"]),
 ]
 
 
@@ -57,16 +64,20 @@ def missing(tools):
 def run_trial(cmd, iface):
     """Run one command while sniffing. Returns ([(rule, time)], start_time)."""
     detector = Detector()
+    dedup = DuplicateFilter() if iface == "lo" else None   # lo shows every packet twice
     alerts = []
 
     def handle(pkt):
+        if dedup and dedup.is_duplicate(pkt):
+            return
         info = parse_packet(pkt)
         if info is None:
             return
         for a in detector.process(info):
             alerts.append((a.rule, time.time()))
 
-    sniffer = AsyncSniffer(iface=iface, prn=handle, store=False)
+    sock = open_capture_socket(iface)          # large buffer: no dropped packets
+    sniffer = AsyncSniffer(opened_socket=sock, prn=handle, store=False)
     sniffer.start()
     time.sleep(1.5)                      # let the capture socket open
     t0 = time.time()
@@ -77,6 +88,10 @@ def run_trial(cmd, iface):
     time.sleep(2)                        # let the last packets be analysed
     try:
         sniffer.stop()
+    except Exception:
+        pass
+    try:
+        sock.close()
     except Exception:
         pass
     time.sleep(1)

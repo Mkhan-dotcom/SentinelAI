@@ -15,6 +15,9 @@ from sniffer.sniffer import PacketInfo
 PORT_SCAN_PORTS = 20        # distinct destination ports ...
 PORT_SCAN_WINDOW = 5        # ... within this many seconds
 
+SLOW_SCAN_PORTS = 20        # distinct destination ports ...
+SLOW_SCAN_WINDOW = 60       # ... within this many seconds (catches slow scans)
+
 ICMP_FLOOD_COUNT = 50       # echo requests ...
 ICMP_FLOOD_WINDOW = 5       # ... within this many seconds
 
@@ -28,7 +31,7 @@ LOGIN_PORTS = {21, 22, 23, 3389, 3306, 5900}
 ALERT_COOLDOWN = 30         # max one alert per rule per source in this time
 # -----------------------------------------------------------------------
 
-MAX_WINDOW = max(PORT_SCAN_WINDOW, ICMP_FLOOD_WINDOW,
+MAX_WINDOW = max(PORT_SCAN_WINDOW, SLOW_SCAN_WINDOW, ICMP_FLOOD_WINDOW,
                  SYN_FLOOD_WINDOW, BRUTE_FORCE_WINDOW)
 
 
@@ -54,6 +57,7 @@ def _slide(dq: deque, now: float, window: float, key=lambda x: x) -> None:
 class Detector:
     def __init__(self):
         self.scan: Dict[str, deque] = defaultdict(deque)    # src -> (ts, dst_port)
+        self.slow: Dict[str, deque] = defaultdict(deque)    # src -> (ts, dst_port)
         self.icmp: Dict[str, deque] = defaultdict(deque)    # src -> ts
         self.syn: Dict[tuple, deque] = defaultdict(deque)   # (dst_ip, dst_port) -> ts
         self.brute: Dict[tuple, deque] = defaultdict(deque) # (src, dst_ip, dst_port) -> ts
@@ -68,7 +72,8 @@ class Detector:
 
         found: List[Optional[Alert]] = []
         if p.protocol == "TCP" and self._is_syn(p):
-            found += [self._port_scan(p), self._syn_flood(p), self._brute_force(p)]
+            found += [self._port_scan(p), self._slow_scan(p),
+                      self._syn_flood(p), self._brute_force(p)]
         elif p.protocol == "ICMP" and p.icmp_type == 8:   # echo request
             found.append(self._icmp_flood(p))
         return [a for a in found if a]
@@ -79,10 +84,11 @@ class Detector:
         """New connection attempt: SYN set, ACK not set."""
         return bool(p.flags) and "S" in p.flags and "A" not in p.flags
 
-    def _allowed(self, rule: str, key: str, now: float) -> bool:
-        """Rate limit: one alert per (rule, key) every ALERT_COOLDOWN seconds."""
+    def _allowed(self, rule: str, key: str, now: float,
+                 cooldown: float = ALERT_COOLDOWN) -> bool:
+        """Rate limit: one alert per (rule, key) every `cooldown` seconds."""
         k = (rule, key)
-        if now - self.last_alert.get(k, -ALERT_COOLDOWN) < ALERT_COOLDOWN:
+        if now - self.last_alert.get(k, -cooldown) < cooldown:
             return False
         self.last_alert[k] = now
         return True
@@ -99,8 +105,23 @@ class Detector:
         _slide(dq, p.timestamp, PORT_SCAN_WINDOW, key=lambda x: x[0])
         ports = {port for _, port in dq}
         if len(ports) >= PORT_SCAN_PORTS and self._allowed("Port Scan", p.src_ip, p.timestamp):
+            # a fast scan is already reported, so do not also report it as a slow one
+            self.last_alert[("Slow Port Scan", p.src_ip)] = p.timestamp
             return self._alert(p, "Port Scan", "HIGH",
                                f"{len(ports)} distinct ports probed in {PORT_SCAN_WINDOW}s")
+        return None
+
+    def _slow_scan(self, p: PacketInfo) -> Optional[Alert]:
+        dq = self.slow[p.src_ip]
+        dq.append((p.timestamp, p.dst_port))
+        _slow_cut = p.timestamp - SLOW_SCAN_WINDOW
+        while dq and dq[0][0] < _slow_cut:
+            dq.popleft()
+        ports = {port for _, port in dq}
+        if (len(ports) >= SLOW_SCAN_PORTS and
+                self._allowed("Slow Port Scan", p.src_ip, p.timestamp, SLOW_SCAN_WINDOW)):
+            return self._alert(p, "Slow Port Scan", "MEDIUM",
+                               f"{len(ports)} distinct ports probed in {SLOW_SCAN_WINDOW}s (slow scan)")
         return None
 
     def _icmp_flood(self, p: PacketInfo) -> Optional[Alert]:
@@ -140,6 +161,7 @@ class Detector:
         cutoff = now - MAX_WINDOW
         tables = (
             (self.scan, lambda e: e[0]),   # entries are (timestamp, port)
+            (self.slow, lambda e: e[0]),
             (self.icmp, lambda e: e),      # entries are timestamps
             (self.syn, lambda e: e),
             (self.brute, lambda e: e),
@@ -150,5 +172,5 @@ class Detector:
                 if not dq or ts_of(dq[-1]) < cutoff:
                     del table[k]
         for k in list(self.last_alert):
-            if self.last_alert[k] < now - ALERT_COOLDOWN:
+            if self.last_alert[k] < now - MAX_WINDOW:
                 del self.last_alert[k]
