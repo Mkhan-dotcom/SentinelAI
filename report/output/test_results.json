@@ -1,30 +1,30 @@
 {
-  "trials_per_test": 5,
+  "trials_per_test": 1,
   "interface": "lo",
   "attacks": [
     {
       "name": "Port Scan",
       "expected_alert": "Port Scan",
-      "trials": 5,
-      "detected": 5,
+      "trials": 1,
+      "detected": 1,
       "detection_rate_pct": 100.0,
-      "avg_latency_s": 0.1,
+      "avg_latency_s": 0.15,
       "other_alerts_seen": []
     },
     {
       "name": "Slow Port Scan",
       "expected_alert": "Slow Port Scan",
-      "trials": 5,
-      "detected": 5,
+      "trials": 1,
+      "detected": 1,
       "detection_rate_pct": 100.0,
-      "avg_latency_s": 8.08,
+      "avg_latency_s": 8.09,
       "other_alerts_seen": []
     },
     {
       "name": "FIN Scan (stealth)",
       "expected_alert": "Stealth Scan",
-      "trials": 5,
-      "detected": 5,
+      "trials": 1,
+      "detected": 1,
       "detection_rate_pct": 100.0,
       "avg_latency_s": 0.07,
       "other_alerts_seen": []
@@ -32,17 +32,17 @@
     {
       "name": "NULL Scan (stealth)",
       "expected_alert": "Stealth Scan",
-      "trials": 5,
-      "detected": 5,
+      "trials": 1,
+      "detected": 1,
       "detection_rate_pct": 100.0,
-      "avg_latency_s": 0.07,
+      "avg_latency_s": 0.08,
       "other_alerts_seen": []
     },
     {
       "name": "Xmas Scan (stealth)",
       "expected_alert": "Stealth Scan",
-      "trials": 5,
-      "detected": 5,
+      "trials": 1,
+      "detected": 1,
       "detection_rate_pct": 100.0,
       "avg_latency_s": 0.06,
       "other_alerts_seen": []
@@ -50,26 +50,26 @@
     {
       "name": "ICMP Flood",
       "expected_alert": "ICMP Flood",
-      "trials": 5,
-      "detected": 5,
+      "trials": 1,
+      "detected": 1,
       "detection_rate_pct": 100.0,
-      "avg_latency_s": 0.14,
+      "avg_latency_s": 0.1,
       "other_alerts_seen": []
     },
     {
       "name": "Brute Force (SSH port)",
       "expected_alert": "Brute Force Attempt",
-      "trials": 5,
-      "detected": 5,
+      "trials": 1,
+      "detected": 1,
       "detection_rate_pct": 100.0,
-      "avg_latency_s": 0.12,
+      "avg_latency_s": 0.11,
       "other_alerts_seen": []
     },
     {
       "name": "SYN Flood",
       "expected_alert": "SYN Flood",
-      "trials": 5,
-      "detected": 5,
+      "trials": 1,
+      "detected": 1,
       "detection_rate_pct": 100.0,
       "avg_latency_s": 0.17,
       "other_alerts_seen": []
@@ -78,59 +78,59 @@
   "benign": [
     {
       "name": "Idle (5 s, no activity)",
-      "trials": 5,
+      "trials": 1,
       "false_alarms": 0,
       "false_alarm_rate_pct": 0.0,
       "alerts_seen": []
     },
     {
       "name": "Normal ping (5 packets)",
-      "trials": 5,
+      "trials": 1,
       "false_alarms": 0,
       "false_alarm_rate_pct": 0.0,
       "alerts_seen": []
     },
     {
       "name": "3 SSH-port connections",
-      "trials": 5,
+      "trials": 1,
       "false_alarms": 0,
       "false_alarm_rate_pct": 0.0,
       "alerts_seen": []
     },
     {
       "name": "Single port check",
-      "trials": 5,
+      "trials": 1,
       "false_alarms": 0,
       "false_alarm_rate_pct": 0.0,
       "alerts_seen": []
     },
     {
       "name": "Quick scan of 15 ports (below limit)",
-      "trials": 5,
+      "trials": 1,
       "false_alarms": 0,
       "false_alarm_rate_pct": 0.0,
       "alerts_seen": []
     },
     {
       "name": "8 SSH-port connections (below limit)",
-      "trials": 5,
+      "trials": 1,
       "false_alarms": 0,
       "false_alarm_rate_pct": 0.0,
       "alerts_seen": []
     },
     {
       "name": "40 pings in 4 s (below limit)",
-      "trials": 5,
+      "trials": 1,
       "false_alarms": 0,
       "false_alarm_rate_pct": 0.0,
       "alerts_seen": []
     }
   ],
   "totals": {
-    "attack_trials": 40,
-    "attacks_detected": 40,
+    "attack_trials": 8,
+    "attacks_detected": 8,
     "overall_detection_rate_pct": 100.0,
-    "benign_trials": 35,
+    "benign_trials": 7,
     "false_alarms": 0,
     "overall_false_alarm_rate_pct": 0.0
   }

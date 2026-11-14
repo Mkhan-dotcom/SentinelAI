@@ -66,6 +66,7 @@ class Detector:
         self.syn: Dict[tuple, deque] = defaultdict(deque)   # (dst_ip, dst_port) -> ts
         self.brute: Dict[tuple, deque] = defaultdict(deque) # (src, dst_ip, dst_port) -> ts
         self.last_alert: Dict[tuple, float] = {}
+        self.arp_table: Dict[str, str] = {}                 # ip -> MAC first seen
         self._seen = 0
 
     # ------------------------------------------------------------------
@@ -84,6 +85,8 @@ class Detector:
                 found.append(self._stealth_scan(p, kind))
         elif p.protocol == "ICMP" and p.icmp_type == 8:   # echo request
             found.append(self._icmp_flood(p))
+        elif p.protocol == "ARP":
+            found.append(self._arp_spoof(p))
         return [a for a in found if a]
 
     # ------------------------------------------------------------------
@@ -156,6 +159,25 @@ class Detector:
             return self._alert(p, "Stealth Scan", "HIGH",
                                f"{len(ports)} distinct ports probed with {top} packets "
                                f"in {STEALTH_SCAN_WINDOW}s")
+        return None
+
+    def _arp_spoof(self, p: PacketInfo) -> Optional[Alert]:
+        """Alert when an IP address suddenly belongs to a different MAC address."""
+        ip, mac = p.src_ip, (p.src_mac or "").lower()
+        if not mac or ip in ("", "0.0.0.0"):      # 0.0.0.0 = address probe, ignore
+            return None
+        known = self.arp_table.get(ip)
+        if known is None:
+            if len(self.arp_table) < 10000:
+                self.arp_table[ip] = mac
+            return None
+        if known == mac:
+            return None
+        self.arp_table[ip] = mac                  # remember the new owner
+        if self._allowed("ARP Spoofing", ip, p.timestamp):
+            return self._alert(p, "ARP Spoofing", "HIGH",
+                               f"{ip} changed from MAC {known} to {mac} "
+                               f"(possible man-in-the-middle)")
         return None
 
     def _icmp_flood(self, p: PacketInfo) -> Optional[Alert]:

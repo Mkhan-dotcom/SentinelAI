@@ -24,6 +24,7 @@ class PacketInfo:
     size: int
     flags: Optional[str]
     icmp_type: Optional[int]
+    src_mac: Optional[str] = None      # sender MAC address (used for ARP)
 
 
 class DuplicateFilter:
@@ -94,7 +95,7 @@ def parse_packet(pkt) -> Optional[PacketInfo]:
     ts, size = float(pkt.time), len(pkt)
     if pkt.haslayer(ARP):
         a = pkt[ARP]
-        return PacketInfo(ts, "ARP", a.psrc, a.pdst, None, None, size, f"op={a.op}", None)
+        return PacketInfo(ts, "ARP", a.psrc, a.pdst, None, None, size, f"op={a.op}", None, a.hwsrc)
     if pkt.haslayer(IP):
         ip = pkt[IP]
     elif pkt.haslayer(IPv6):
