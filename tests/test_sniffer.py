@@ -15,6 +15,7 @@ A, B = "10.0.0.1", "10.0.0.2"
 
 def wire(layers, t):
     """Build the packet and read it back, the way a sniffer would see it."""
+    layers[Ether].dst = "02:00:00:00:00:02"      # explicit, so Scapy never looks MACs up
     pkt = Ether(bytes(layers))
     pkt.time = t
     return pkt
